@@ -1,9 +1,11 @@
+Vue.config.devtools = true;
+
 Vue.component('product', {
     props: {
         premium: {
             type: Boolean,
             required: true
-        }
+        },
     },
     template: `
         <div class="product">
@@ -32,16 +34,21 @@ Vue.component('product', {
 
                 <h3>Sizes</h3>
                 <li v-for="size in sizes">{{ size }}</li>
+                <h3>In Cart: {{ inCart }}</h3>
             </div>
-
+            <div>
+                <button v-on:click="addToCart" 
             <button v-on:click="addToCart" 
-                    :disabled="!inStock"
-                    :class="{ disabledButton: !inStock }">Add to Cart</button>
-
-            <div class="cart">
-                <p>Cart ({{cart}})</p>
+                <button v-on:click="addToCart" 
+            <button v-on:click="addToCart" 
+                <button v-on:click="addToCart" 
+                        :disabled="!inStock"
+                        :class="{ disabledButton: !inStock }">Add to Cart</button>
             </div>
-
+            <div>
+                <button v-on:click="removeFromCart"
+                        class="remove">-</button>
+            </div>
         </div>
     `,
     data() {
@@ -57,24 +64,25 @@ Vue.component('product', {
                     variantId: 2234,
                     variantColor: "green",
                     variantImage: "./assets/vmSocks-green-onWhite.jpg",
-                    variantQuantity: 10
+                    variantQuantity: 10,
+                    isInCart: false,
                 },
                 {
                     variantId: 2235,
                     variantColor: "blue",
                     variantImage: "./assets/vmSocks-blue-onWhite.jpg",
-                    variantQuantity: 0
+                    variantQuantity: 10,
+                    isInCart: false,
                 }
-            ],
-            cart: 0
+            ]
         }
     },
     methods: {
         addToCart() {
-            this.cart += 1;
+            this.$emit('add-to-cart', this.variants[this.selectedVariant].variantId);
         },
         removeFromCart() {
-            this.cart -= 1;
+            this.$emit('remove-from-cart', this.variants[this.selectedVariant].variantId);
         },
         updateProduct(index) {
             this.selectedVariant = index
@@ -89,8 +97,10 @@ Vue.component('product', {
         },
         inStock() {
             let stock = this.variants[this.selectedVariant].variantQuantity;
-            console.log(stock)
             return stock
+        },
+        inCart() {
+            return this.variants[this.selectedVariant].isInCart;
         },
         shipping() {
             if (this.premium) {
@@ -104,6 +114,20 @@ Vue.component('product', {
 var app = new Vue({
     el: '#app',
     data: {
-        premium: true
-    }
+        premium: true,
+        cart: []
+    },
+    methods: {
+        updateCart(id) {
+            this.cart.push(id);
+        },
+        removeFromCart(id) {
+            for (var i=0; i < this.cart.length; i++) {
+                if (this.cart[i] === id) {
+                    this.cart.splice(i, 1);
+                };
+            };
+        }
+    },
+    mode: 'development'
 });
