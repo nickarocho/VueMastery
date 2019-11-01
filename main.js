@@ -4,7 +4,7 @@ Vue.component('product', {
     props: {
         premium: {
             type: Boolean,
-            required: true
+            required: false
         },
     },
     template: `
@@ -44,6 +44,19 @@ Vue.component('product', {
                 </div>
             </div>
 
+            <div>
+                <h2>Reviews</h2>
+                <p v-if="!reviews.length">There are no reviews yet.</p>
+                <ul>
+                    <li v-for="review in reviews">
+                        <p>{{ review.name }}</p>
+                        <p>Rating: {{ review.rating }}</p>
+                        <p>{{ review.review }}</p>
+                        <p>Recommended? {{ review.recommended }}</p>
+                    </li>
+                </ul>
+            </div>
+
             <product-review @review-submitted="addReview"></product-review>
         </div>
     `,
@@ -72,7 +85,7 @@ Vue.component('product', {
                 }
             ],
             reviews: []
-        }
+        };
     },
     methods: {
         addToCart() {
@@ -86,7 +99,7 @@ Vue.component('product', {
         },
         addReview(productReview) {
             this.reviews.push(productReview);
-        }
+        },
     },
     computed: {
         title() {
@@ -107,14 +120,19 @@ Vue.component('product', {
                 return "Free"
             }
             return 2.99
-        }
-    }
+        },
+    },
 });
 
 Vue.component('product-review', {
     template: `
-        <form class="review-form" @sumbit.prevent="onSubmit">
+        <form class="review-form" @submit.prevent="onSubmit">
 
+            <p v-if="errors.length">
+                <b>Please correct the following error(s)</b>
+                <ul>
+                    <li v-for="error in errors">{{ error }}</li>
+                </ul>
             <p>
                 <label for="name">Name:</label>
                 <input id="name" v-model="name">
@@ -137,6 +155,16 @@ Vue.component('product-review', {
             </p>
 
             <p>
+                <p>Would you recommend this product?</p>
+                <div>
+                    <label for="recommended-yes">Hell yes</label>
+                    <input type="radio" id="recommended-yes" name="recommended" v-model="recommended" value="Yes"></input>
+                    <label for="recommended-no">Nope</label>
+                    <input type="radio" id="recommended-no" name="recommended" v-model="recommended" value="No"></input>
+                </div>
+            </p>
+
+            <p>
                 <input type="submit" value="Submit">
             </p>
 
@@ -146,22 +174,35 @@ Vue.component('product-review', {
         return {
             name: null,
             review: null,
-            rating: null
-        }
+            rating: null,
+            recommended: null,
+            errors: []
+        };
     },
     methods: {
         onSubmit() {
-            let productReview = {
-                name: this.name,
-                review: this.rating
-            }
-            this.$emit('review-submitted', productReview)
-            this.name = null
-            this.review = null
-            this.rating = null
-        }
-    }
-})
+            this.errors = [];
+            if (this.name && this.review && this.rating && this.recommended) {
+                let productReview = {
+                    name: this.name,
+                    review: this.review,
+                    rating: this.rating,
+                    recommended: this.recommended
+                };
+                this.$emit('review-submitted', productReview);
+                this.name = null;
+                this.review = null;
+                this.rating = null;
+                this.recommended = null;
+            } else {
+                if (!this.name) this.errors.push("Name required.");
+                if (!this.review) this.errors.push("Review required.");
+                if (!this.rating) this.errors.push("Rating required.");
+                if (!this.recommended) this.errors.push("Recommendation required.");
+            };
+        },
+    },
+});
 
 var app = new Vue({
     el: '#app',
@@ -179,7 +220,7 @@ var app = new Vue({
                     this.cart.splice(i, 1);
                 };
             };
-        }
+        },
     },
     mode: 'development'
 });
